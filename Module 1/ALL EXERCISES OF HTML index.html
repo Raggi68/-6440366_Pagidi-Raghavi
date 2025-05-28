@@ -66,10 +66,17 @@
       padding: 10px;
     }
 
+    form label {
+      display: block;
+      text-align: left;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
     form input, form select, form textarea, form button {
       display: block;
       width: 100%;
-      margin: 10px 0;
+      margin: 5px 0 15px 0;
       padding: 10px;
       font-size: 1rem;
       border: 1px solid #ccc;
@@ -101,12 +108,17 @@
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .box:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <nav>
+    <nav aria-label="Main navigation">
       <a href="#home">Home</a>
       <a href="#events">Events</a>
       <a href="#contact">Contact</a>
@@ -141,21 +153,36 @@
 
       <h3>Register for an Event</h3>
       <form onsubmit="showConfirmation(); return false;">
-        <input type="text" placeholder="Your Name" required autofocus>
-        <input type="email" placeholder="Your Email" required>
-        <input type="date" required>
+        <label for="name">Name</label>
+        <input id="name" type="text" placeholder="Your Name" required autofocus>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="Your Email" required>
+
+        <label for="date">Date</label>
+        <input id="date" type="date" required>
+
+        <label for="eventType">Event Type</label>
         <select id="eventType" onchange="savePreference()" required>
           <option value="">Select Event Type</option>
           <option value="sports">Sports</option>
           <option value="music">Music</option>
         </select>
-        <textarea placeholder="Message" required></textarea>
-        <input type="text" id="phone" placeholder="Phone Number" onblur="validatePhone()">
+
         <div id="feeDisplay"></div>
+
+        <label for="message">Message</label>
+        <textarea id="message" placeholder="Message" required></textarea>
+
+        <label for="phone">Phone Number</label>
+        <input type="text" id="phone" placeholder="Phone Number" onblur="validatePhone()">
+
+        <label for="feedback">Your Feedback</label>
         <textarea id="feedback" onkeyup="countChars()" placeholder="Your feedback"></textarea>
         <p>Characters: <span id="charCount">0</span></p>
+
         <button type="submit">Register</button>
-        <output id="confirmationMsg"></output>
+        <p id="confirmationMsg" role="status" aria-live="polite"></p>
       </form>
 
       <video id="promoVideo" width="320" controls oncanplay="readyMsg()">
@@ -192,12 +219,17 @@
     }
 
     function triggerError() {
-      let num = undefined;
-      console.log(num.toUpperCase()); // Intentional error
+      try {
+        let num = undefined;
+        console.log(num.toUpperCase()); // Intentional error
+      } catch (e) {
+        console.error("Caught an error:", e.message);
+        alert("An error occurred. Check console.");
+      }
     }
 
     function showConfirmation() {
-      document.getElementById("confirmationMsg").value = "Thank you for registering!";
+      document.getElementById("confirmationMsg").innerText = "Thank you for registering!";
     }
 
     function validatePhone() {
@@ -223,11 +255,22 @@
     function savePreference() {
       const selected = document.getElementById("eventType").value;
       localStorage.setItem("eventType", selected);
+      const feeDisplay = document.getElementById("feeDisplay");
+      if (selected === "sports") {
+        feeDisplay.innerText = "Registration Fee: $10";
+      } else if (selected === "music") {
+        feeDisplay.innerText = "Registration Fee: $15";
+      } else {
+        feeDisplay.innerText = "";
+      }
     }
 
     window.onload = function () {
       const type = localStorage.getItem("eventType");
-      if (type) document.getElementById("eventType").value = type;
+      if (type) {
+        document.getElementById("eventType").value = type;
+        savePreference(); // Also update fee display on load
+      }
     }
 
     function findNearby() {
