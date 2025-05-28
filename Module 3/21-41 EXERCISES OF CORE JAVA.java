@@ -9,10 +9,10 @@ public class AgeValidator {
     public static void main(String[] args) {
         int age = 15;
         try {
-            if (age < 18)
+            if (age < 18) {
                 throw new InvalidAgeException("Not eligible to vote");
-            else
-                System.out.println("Eligible to vote");
+            }
+            System.out.println("Eligible to vote");
         } catch (InvalidAgeException e) {
             System.out.println("Caught Exception: " + e.getMessage());
         }
@@ -24,16 +24,16 @@ import java.io.*;
 import java.util.Scanner;
 
 public class FileWriteExample {
-    public static void main(String[] args) throws IOException {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Enter text to write to file: ");
-        String text = sc.nextLine();
-
-        BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
-        writer.write(text);
-        writer.close();
-
-        System.out.println("Data written to output.txt successfully.");
+    public static void main(String[] args) {
+        try (Scanner sc = new Scanner(System.in);
+             BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"))) {
+            System.out.print("Enter text to write to file: ");
+            String text = sc.nextLine();
+            writer.write(text);
+            System.out.println("Data written to output.txt successfully.");
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
     }
 }
 
@@ -41,25 +41,28 @@ public class FileWriteExample {
 import java.io.*;
 
 public class FileReadExample {
-    public static void main(String[] args) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader("output.txt"));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
+    public static void main(String[] args) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("output.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
         }
-        reader.close();
     }
 }
 
+
 //Exercise 24: ArrayList Example
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 public class StudentList {
     public static void main(String[] args) {
-        ArrayList<String> students = new ArrayList<>();
+        List<String> students = new ArrayList<>();
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter student names (type 'end' to stop):");
+
         while (true) {
             String name = sc.nextLine();
             if (name.equalsIgnoreCase("end")) break;
@@ -67,18 +70,17 @@ public class StudentList {
         }
 
         System.out.println("Student Names:");
-        for (String s : students) {
-            System.out.println(s);
-        }
+        students.forEach(System.out::println);
     }
 }
+
 
 //Exercise 25: HashMap Example
 import java.util.*;
 
 public class StudentMap {
     public static void main(String[] args) {
-        HashMap<Integer, String> students = new HashMap<>();
+        Map<Integer, String> students = new HashMap<>();
         Scanner sc = new Scanner(System.in);
 
         System.out.println("Enter student ID and name (type -1 to stop):");
@@ -105,12 +107,11 @@ class MyThread extends Thread {
     }
 
     public static void main(String[] args) {
-        MyThread t1 = new MyThread();
-        MyThread t2 = new MyThread();
-        t1.start();
-        t2.start();
+        new MyThread().start();
+        new MyThread().start();
     }
 }
+
 
 //Exercise 27: Lambda Expressions
 import java.util.*;
@@ -118,23 +119,22 @@ import java.util.*;
 public class LambdaSort {
     public static void main(String[] args) {
         List<String> names = Arrays.asList("John", "Alice", "Bob", "David");
-        Collections.sort(names, (a, b) -> a.compareToIgnoreCase(b));
+        names.sort(String::compareToIgnoreCase);
         names.forEach(System.out::println);
     }
 }
 
+
 //Exercise 28: Stream API
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.*;
 
 public class StreamFilter {
     public static void main(String[] args) {
         List<Integer> numbers = Arrays.asList(10, 15, 20, 25, 30);
-        List<Integer> even = numbers.stream()
-                .filter(n -> n % 2 == 0)
-                .collect(Collectors.toList());
-
-        even.forEach(System.out::println);
+        numbers.stream()
+               .filter(n -> n % 2 == 0)
+               .forEach(System.out::println);
     }
 }
 
@@ -157,6 +157,7 @@ public class RecordExample {
     }
 }
 
+
 //Exercise 30: Pattern Matching for switch (Java 21)
 public class PatternSwitch {
     public static void checkType(Object obj) {
@@ -175,51 +176,54 @@ public class PatternSwitch {
     }
 }
 
+
 //Exercise 31: Basic JDBC Connection
 import java.sql.*;
 
 public class JDBCConnect {
     public static void main(String[] args) {
-        try {
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:students.db");
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM students");
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:students.db");
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM students")) {
 
             while (rs.next()) {
                 System.out.println(rs.getInt("id") + ": " + rs.getString("name"));
             }
 
-            conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 }
 
+
 //Exercise 32: Insert and Update Operations in JDBC
 import java.sql.*;
 
 public class StudentDAO {
-    Connection conn;
+    private Connection conn;
 
-    StudentDAO() throws SQLException {
+    public StudentDAO() throws SQLException {
         conn = DriverManager.getConnection("jdbc:sqlite:students.db");
     }
 
-    void insertStudent(int id, String name) throws SQLException {
-        PreparedStatement ps = conn.prepareStatement("INSERT INTO students (id, name) VALUES (?, ?)");
-        ps.setInt(1, id);
-        ps.setString(2, name);
-        ps.executeUpdate();
+    public void insertStudent(int id, String name) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO students (id, name) VALUES (?, ?)")) {
+            ps.setInt(1, id);
+            ps.setString(2, name);
+            ps.executeUpdate();
+        }
     }
 
-    void updateStudent(int id, String name) throws SQLException {
-        PreparedStatement ps = conn.prepareStatement("UPDATE students SET name=? WHERE id=?");
-        ps.setString(1, name);
-        ps.setInt(2, id);
-        ps.executeUpdate();
+    public void updateStudent(int id, String name) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("UPDATE students SET name=? WHERE id=?")) {
+            ps.setString(1, name);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
     }
 }
+
 
 // Exercise 33: Transaction Handling in JDBC
 import java.sql.*;
@@ -229,26 +233,27 @@ public class BankTransfer {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:bank.db")) {
             conn.setAutoCommit(false);
 
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate("UPDATE accounts SET balance = balance - 100 WHERE id = 1");
-            stmt.executeUpdate("UPDATE accounts SET balance = balance + 100 WHERE id = 2");
-
-            conn.commit();
-            System.out.println("Transaction successful");
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("UPDATE accounts SET balance = balance - 100 WHERE id = 1");
+                stmt.executeUpdate("UPDATE accounts SET balance = balance + 100 WHERE id = 2");
+                conn.commit();
+                System.out.println("Transaction successful");
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Transaction failed, rolled back: " + e.getMessage());
+            }
 
         } catch (SQLException e) {
-            System.out.println("Transaction failed: " + e.getMessage());
+            System.out.println("Connection failed: " + e.getMessage());
         }
     }
 }
 
+
 //Exercise 34: Create and Use Java Modules
-module-info.java in com.utils:
 module com.utils {
     exports com.utils;
 }
-
-module-info.java in com.greetings:
 module com.greetings {
     requires com.utils;
 }
@@ -260,17 +265,14 @@ import java.io.*;
 
 public class Server {
     public static void main(String[] args) throws IOException {
-        ServerSocket server = new ServerSocket(1234);
-        Socket socket = server.accept();
+        try (ServerSocket server = new ServerSocket(1234);
+             Socket socket = server.accept();
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-        out.println("Hello client!");
-        System.out.println("Client: " + in.readLine());
-
-        socket.close();
-        server.close();
+            out.println("Hello client!");
+            System.out.println("Client: " + in.readLine());
+        }
     }
 }
 
@@ -280,17 +282,16 @@ import java.io.*;
 
 public class Client {
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 1234);
+        try (Socket socket = new Socket("localhost", 1234);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-        System.out.println("Server: " + in.readLine());
-        out.println("Hello server!");
-
-        socket.close();
+            System.out.println("Server: " + in.readLine());
+            out.println("Hello server!");
+        }
     }
 }
+
 
 //Exercise 36: HTTP Client API (Java 11+)
 import java.net.http.*;
@@ -309,6 +310,7 @@ public class HttpExample {
         System.out.println("Body: " + response.body());
     }
 }
+
 
 //Exercise 37: Using javap to Inspect Bytecode
 Demo.java:
@@ -372,11 +374,11 @@ java -jar cfr.jar Hello.class
 
 // Exercise 39: Reflection in Java
 import java.lang.reflect.*;
+
 public class ReflectionDemo {
     public static void main(String[] args) throws Exception {
         Class<?> cls = Class.forName("java.lang.String");
-        Method[] methods = cls.getDeclaredMethods();
-        for (Method m : methods) {
+        for (Method m : cls.getDeclaredMethods()) {
             System.out.println(m.getName());
         }
     }
